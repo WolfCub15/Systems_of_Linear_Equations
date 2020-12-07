@@ -244,4 +244,3 @@ vector<double> jacobi(const vector<vector<double>>& A, const vector<double>& b, 
     } while (converge(A, x, b, eps) >= eps && max_count);
     return x;
 }
-
