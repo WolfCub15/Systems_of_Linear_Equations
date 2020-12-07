@@ -110,7 +110,6 @@ vector<double> cramer(const vector<vector<double>>& A, const vector<double>& b, 
     vector<double> x;
     x.reserve(b.size());
     double det = determinant(A);
-    cout << det << '\n';
     vector<double> ds;
     ds.reserve(b.size());
     if (fabs(det) > 1e-9) {
@@ -190,7 +189,6 @@ vector<double> simpleIteration(const vector<vector<double>>& A, const vector<dou
 vector<double> seidel(const vector<vector<double>>& A, const vector<double>& b, double eps, int &count) {
     int n = A.size();
     vector<double> x(n,0),pr(n,0);
-    count =0;
     int max_count = 500;
     do {
         for (int i = 0; i < n; ++i) {
