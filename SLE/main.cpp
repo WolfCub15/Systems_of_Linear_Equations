@@ -2,21 +2,24 @@
 #include <cmath>
 #include <vector>
 #include <random>
+#include <chrono>
 #include "methods.h"
 using namespace std;
 
-#define solveTask(algoName, func, A, b, eps)                                                                    \
+#define solveTask(algoName, func, A, b, eps) {                                                                  \
     cout << "*********************************************************************************************\n";  \
     cout << algoName << ":\n";                                                                                  \
     iterations = 0;                                                                                             \
-    tStart = clock();                                                                                           \
+    auto start = std::chrono::system_clock::now();                                                              \
     x = func(A, b, eps, iterations);                                                                            \
-    tEnd = clock();                                                                                             \
-    cout << "Number of iterations:  " << iterations << '\n';                                                    \
-    printAnsX(x);                                                                                               \
-    tEnd -= tStart;                                                                                             \
-    cout << fixed << setprecision(20) << "Mean squared error: " << converge(A, x, b, eps) << '\n';              \
-    cout << fixed << setprecision(20) << "Runtime:            " << tEnd / CLOCKS_PER_SEC << "s\n";
+    auto end = std::chrono::system_clock::now();                                                                \
+    if (algoName != "Cramer's method" && algoName != "Gauss method")                                            \
+        cout << "Number of iterations:  " << iterations << '\n';                                                \
+    if (iterations >= 500) cout << "Can not solve\n";                                                           \
+    else {                                                                                                      \
+    std::chrono::duration<double> elapsed = end - start;                                                        \
+    cout << fixed << setprecision(20) << "Mean squared error: " << converge(A, x, b) << '\n';                   \
+    cout << fixed << setprecision(20) << "Elapsed time:       " << elapsed.count() << "s\n"; }}
 
 int main() {
     int lolo;
@@ -35,6 +38,11 @@ int main() {
         b = inputB(size);
         cout << "Enter precision (epsilon):\n";
         cin >> eps;
+        makeBeautifulMatrix(A, b, eps);
+        if (fabs(determinant(A) < 1e-9)){
+            cout << "det A = 0\n";
+            return 0;
+        }
     }
     else {
         cout << "Enter size of system :\n";
@@ -43,7 +51,7 @@ int main() {
         // printMatrixA(A);
         b = randomB(size);
         // printAnsX(b);
-        eps = 0.01;
+        eps = 1e-9;
     }
     int iterations;
     vector<double> x;
