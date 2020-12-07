@@ -1,19 +1,19 @@
-#include "headers.h"
+#include "methods.h"
 
-void printMatrixA(vector<vector<double>> A) {
+void printMatrixA(const vector<vector<double>> &A) {
 	for (int i = 0; i < A.size(); ++i) {
 		for (int j = 0; j < A[0].size(); ++j) {
 			cout << A[i][j] << ' ';
 		}
-		cout << "\n";
+		cout << '\n';
 	}
 }
 
-void printAnsX(vector<double> x){
-	for(int i=0;i<x.size();++i){
+void printAnsX(const vector<double>& x){
+	for (int i = 0; i < x.size(); ++i) {
 		cout << fixed << setprecision(10) << "x" << i << "  :  " << x[i] << '\n';
 	}
-	cout<<'\n';
+	cout << '\n';
 }
 
 vector<vector<double>> inputMatrixA(int n) {
@@ -38,11 +38,11 @@ vector<vector<double>> randomMatrixA(int n) {
 	mt19937 gen;
     gen.seed(static_cast<unsigned int>(time(0)));
 	vector<vector<double>> A(n, vector<double>(n));
-	for(int i=0;i<n;++i){
-		for(int j=0;j<n;++j){
-			double val = gen()&100;
-			if(i==j)A[i][j] = val*99*n+1000;
-			else A[i][j]=val;
+	for (int i = 0; i < n; ++i) {
+		for (int j = 0; j < n; ++j) {
+			double val = gen() % 100;
+			if (i == j) A[i][j] = val * 99 * n + 1000;
+			else A[i][j] = val;
 		}
 	}
 	return A;
@@ -52,15 +52,15 @@ vector<double> randomB(int n) {
 	mt19937 gen;
     gen.seed(static_cast<unsigned int>(time(0)));
     vector<double> vec(n);
-	for(int i = 0;i<n;++i){
-		vec[i] = gen()%100+99*n;
+	for (int i = 0; i < n; ++i) {
+		vec[i] = gen() % 100 + 99 * n;
 	}
     return vec;
 }
 
-double Determinant(vector<vector<double>> A) {
+double determinant(vector<vector<double>> A) {
 	double det = 1;
-	const double EPS = 1E-9;
+	const double EPS = 1e-9;
 	for (int i = 0; i < A.size(); ++i) {
 		int k = i;
 		for (int j = i + 1; j < A.size(); ++j) {
@@ -90,34 +90,35 @@ double Determinant(vector<vector<double>> A) {
 	return det;
 }
 
-vector<double> Cramer(vector<vector<double>> A, vector<double> b) {
+vector<double> cramer(const vector<vector<double>>& A, const vector<double>& b, double eps, int& iterations) {
 	vector<double> x;
-	double determinant = Determinant(A);
+	x.reserve(b.size());
+	double det = determinant(A);
 	vector<double> ds;
-	if (determinant != 0) {
-		for (int i = 0; i < A.size(); ++i) {
-			vector<vector<double>> tmp;
-			for (vector<double>& q : A)	tmp.push_back(q);
-			for (int j = 0; j < tmp.size(); ++j) tmp[j][i] = b[j];
-			double lolo = Determinant(tmp);
+	ds.reserve(b.size());
+	if (det != 0) {
+		for (int i = 0; i < (int)A.size(); ++i) {
+			vector<vector<double>> tmp = A;
+			for (int j = 0; j < tmp.size(); ++j) 
+				tmp[j][i] = b[j];
+			double lolo = determinant(tmp);
 			ds.push_back(lolo);
 		}
 	}
-	else cout<<"The system has infinitely many solutions or is incompatible"<<'\n';
+	else cout << "The system has infinitely many solutions or is incompatible\n";
 	for (double di : ds) {
-		double ans = di / determinant;
+		double ans = di / det;
 		x.push_back(ans);
 	}
 	return x;
 }
 
-vector<double> Gauss(vector<vector<double>> A, vector<double> b) {
+vector<double> gauss(vector<vector<double>> A, vector<double> b, double eps, int& iterations) {
 	int n = A.size();
-	vector<double> x(n,0);
-	double k;
+	vector<double> x(n, 0);
 	for (int q = 0; q < n; ++q) {
 		for (int i = q + 1; i < n; ++i) {
-			k = A[i][q] / A[q][q];
+			double k = A[i][q] / A[q][q];
 			for (int j = q; j < n; ++j) {
 				A[i][j] -= k * A[q][j];
 			}
@@ -136,7 +137,7 @@ vector<double> Gauss(vector<vector<double>> A, vector<double> b) {
 	return x;
 }
 
-int converge(vector<vector<double>> A, vector<double> x, vector<double> b, double eps) {
+double converge(const vector<vector<double>>& A, const vector<double>& x, const vector<double>& b, double eps) {
     double ans = 0;
 	int n = A.size();
     for (int i = 0; i < n; ++i) {
@@ -146,14 +147,13 @@ int converge(vector<vector<double>> A, vector<double> x, vector<double> b, doubl
         }
         ans += pow(b[i]-sum, 2);
     }
-	if(sqrt(ans)<eps) return 1;
-	else return 0;
+	return sqrt(ans);
 }
 
-vector<double> SimpleIteration(vector<vector<double>> A, vector<double> b, double eps,int &count) {
+vector<double> simpleIteration(const vector<vector<double>>& A, const vector<double>& b, double eps,int &count) {
 	int n = A.size();
 	vector<double> x(n,0);
-	vector<double> x0(n,0);
+	vector<double> x0;
 	int max_count = 100;
 	count = 0;
 	do {
@@ -169,12 +169,12 @@ vector<double> SimpleIteration(vector<vector<double>> A, vector<double> b, doubl
 		}
 		count++;
 		max_count--;
-	}while(converge(A,x,b,eps)==0 && max_count);
+	} while(converge(A, x, b, eps) >= eps && max_count);
 	
 	return x;
 }
 
-vector<double> Seidel(vector<vector<double>> A, vector<double> b, double eps, int &count) {
+vector<double> seidel(const vector<vector<double>>& A, const vector<double>& b, double eps, int &count) {
 	int n = A.size();
 	vector<double> x(n,0),pr(n,0);
 	count =0;
@@ -190,19 +190,19 @@ vector<double> Seidel(vector<vector<double>> A, vector<double> b, double eps, in
         }
 		count++;
 		max_count--;
-    } while (converge(A, x, b,eps)==0 && max_count);
+	} while (converge(A, x, b, eps) >= eps && max_count);
 	return x;
 }
 
-vector<double> Relaxation(vector<vector<double>> A, vector<double> b, double eps,int &count) {
+vector<double> relaxation(const vector<vector<double>>& A, const vector<double>& b, double eps,int &count) {
 	int n = A.size();
-	vector<double>x(n,0),xn(n,0);
+	vector<double> x(n, 0), xn(n, 0);
 	double w;
-    int max_count=100;
+    int max_count = 100;
 	mt19937 gen;
     gen.seed(static_cast<unsigned int>(time(0)));
-    w = 100+gen()%100;
-	w/=100;
+    w = 100 + gen() % 100;
+	w /= 100;
 	do {
         for (int i = 0; i < n; ++i) {
             x[i] = b[i];
@@ -216,11 +216,11 @@ vector<double> Relaxation(vector<vector<double>> A, vector<double> b, double eps
         }
 		count++;
 		max_count--;
-    } while (converge(A, x, b,eps)==0 && max_count);
+	} while (converge(A, x, b, eps) >= eps && max_count);
 	return x;
 }
 
-vector<double> Jacobi(vector<vector<double>> A, vector<double> b, double eps, int& count) {
+vector<double> jacobi(const vector<vector<double>>& A, const vector<double>& b, double eps, int& count) {
 	int n = A.size();
 	vector<double> x(n, 0);
 	vector<double> x0 = b;
@@ -241,8 +241,7 @@ vector<double> Jacobi(vector<vector<double>> A, vector<double> b, double eps, in
 		}
 		count++;
 		max_count--;
-	} while (converge(A, x, b, eps) == 0 && max_count);
-
+	} while (converge(A, x, b, eps) >= eps && max_count);
 	return x;
 }
 
